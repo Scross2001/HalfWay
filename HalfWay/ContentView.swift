@@ -35,7 +35,9 @@ struct ContentView: View {
                         .textFieldStyle(.roundedBorder)
 
                     Button(action: {
-                        printCords()
+                        Task{
+                            await printCords()
+                        }
                     }) {
                         Text("Print Coordinates")
                             .frame(maxWidth: .infinity)
@@ -90,8 +92,34 @@ extension ContentView {
         self.searchResults = results?.mapItems ?? []
     }
     
-    func printCords(){
+    func printCords() async{
+        var totalLong = 0.0
+        var totalLat = 0.0
+        var count = 0
+        arrays.forEach{ cordante in
+            totalLong += cordante.longitude
+            totalLat += cordante.latitude
+            count += 1
+        }
+        print("Longitude\(totalLong) Latitude\(totalLat)")
+        print("Final")
+        print("Longitude\(totalLong/Double(count)) Latitude\(totalLat/Double(count))")
         print(arrays)
+        print(count)
+        
+        let request = MKLocalSearch.Request()
+        request.naturalLanguageQuery = "Resturants"
+        
+        let userCoordinate = CLLocationCoordinate2D(latitude: totalLat/Double(count), longitude: totalLong/Double(count))
+        
+        request.region = MKCoordinateRegion(
+                center: userCoordinate,
+                span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
+            )
+        
+        let results = try? await MKLocalSearch(request: request).start()
+        self.searchResults = results?.mapItems ?? []
+        
     }
     
     func addLocation() async {
